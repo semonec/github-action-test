@@ -2,6 +2,7 @@ name: CI script
 on: [pull_request]
 jobs:
   checkout:
+    permissions: write-all
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
