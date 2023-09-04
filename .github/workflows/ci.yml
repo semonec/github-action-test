@@ -1,0 +1,28 @@
+name: CI script
+on: [pull_request]
+jobs:
+  checkout:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: npm ci
+      - run: npm run build
+      - run: npm test
+      - name: Comment on Failure
+        if: ${{ failure() }}
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              body: '❌ CI failed ❌'
+            })
+      - name: Comment on success
+        if: ${{ success() }}
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              body: '🟢 CI passed '🟢'
+            })
