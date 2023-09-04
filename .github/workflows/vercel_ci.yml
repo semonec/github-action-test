@@ -1,0 +1,78 @@
+name: Vercel CI
+env:
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+on:
+  pull_request:
+    types: [opened, reopened, edited]
+jobs:
+  deploy-preview:
+    runs-on: ubuntu-latest
+    outputs: 
+      deploymentUrl: ${{ steps.deploy-step.outputs.deploymentUrl }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+      - name: Pull Vercel Environment Information
+        run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+      - name: Build Project Artifacts
+        run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
+      - name: Deploy Project Artifacts to Vercel
+        id: deploy-step
+        run: |
+          vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }} >deployment-url.txt
+          echo "deploymentUrl=$(cat deployment-url.txt)" >> $GITHUB_OUTPUT
+  Add-Comment:
+    runs-on: ubuntu-latest
+    needs: deploy-preview
+    if: always()
+    permissions: 
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Comment to PR (Succeeded)
+        env: 
+          DEPLOYMENT_URL: ${{needs.deploy-preview.outputs.deploymentUrl}}
+          RESULT: ${{needs.deploy-preview.result}}
+        if: ${{ env.RESULT }} == 'success'
+        uses: actions/github-script@v6
+        id: my-script
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: "🟢 Deployed at ${{env.DEPLOYMENT_URL}}"
+            })
+      - name: Comment to PR (Failure)
+        env: 
+          DEPLOYMENT_URL: ${{needs.deploy-preview.outputs.deploymentUrl}}
+          RESULT: ${{needs.deploy-preview.result}}
+        if: ${{ env.RESULT }} == 'failure'
+        uses: actions/github-script@v6
+        id: my-script
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: "🔴 Failed to deploy preview"
+            })
+      - name: Comment to PR (cancelled)
+        env: 
+          DEPLOYMENT_URL: ${{needs.deploy-preview.outputs.deploymentUrl}}
+          RESULT: ${{needs.deploy-preview.result}}
+        if: ${{ env.RESULT }} == 'cancelled'
+        uses: actions/github-script@v6
+        id: my-script
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: "❌ Cancelled to deploy preview"
+            })
