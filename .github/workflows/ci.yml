@@ -1,32 +1,23 @@
 name: CI script
-on: [pull_request]
+on: [ pull_request ]
 jobs:
   checkout:
-    permissions: write-all
+    permissions: write-all # Grant permission for writing comment 
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - run: npm ci
       - run: npm run build
       - run: npm test
-      - name: Comment on Failure
-        if: ${{ failure() }}
-        uses: actions/github-script@v6
-        with:
-          script: |
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              body: '❌ CI failed ❌'
-            })
       - name: Add comment to PR
         uses: actions/github-script@v6
         if: always()
         with:
           script: |
-            const name = '${{ github.workflow   }}';
+            const name = '${{ github.workflow }}';
             const url = '${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}';
             const success = '${{ job.status }}' === 'success';
-            const body = `${name}: ${success ? 'succeeded ✅' : 'failed ❌'}\n${url}`;
+            const body = `${name}: ${success ? 'Succeeded ✅' : 'Failed ❌'}\n${url}`;
 
             await github.rest.issues.createComment({
               issue_number: context.issue.number,
