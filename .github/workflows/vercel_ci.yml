@@ -32,8 +32,7 @@ jobs:
       - name: Comment to PR (Succeeded)
         env: 
           DEPLOYMENT_URL: ${{needs.deploy-preview.outputs.deploymentUrl}}
-          RESULT: ${{needs.deploy-preview.result}}
-        if: ${{ env.RESULT }} == 'success'
+        if: needs.deploy-preview.result == 'success'
         uses: actions/github-script@v6
         with:
           script: |
@@ -46,8 +45,7 @@ jobs:
       - name: Comment to PR (Failure)
         env: 
           DEPLOYMENT_URL: ${{needs.deploy-preview.outputs.deploymentUrl}}
-          RESULT: ${{needs.deploy-preview.result}}
-        if: ${{ env.RESULT }} == 'failure'
+        if: needs.deploy-preview.result == 'failure'
         uses: actions/github-script@v6
         with:
           script: |
@@ -60,8 +58,7 @@ jobs:
       - name: Comment to PR (cancelled)
         env: 
           DEPLOYMENT_URL: ${{needs.deploy-preview.outputs.deploymentUrl}}
-          RESULT: ${{needs.deploy-preview.result}}
-        if: ${{ env.RESULT }} == 'cancelled'
+        if: needs.deploy-preview.result == 'cancelled'
         uses: actions/github-script@v6
         with:
           script: |
