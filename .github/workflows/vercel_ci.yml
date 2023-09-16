@@ -2,16 +2,14 @@ name: Vercel CI
 env:
   VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
   VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-on:
-  pull_request:
-    types: [opened, reopened, edited]
+on: [ pull_request ]
 jobs:
   deploy-preview:
     runs-on: ubuntu-latest
     outputs: 
       deploymentUrl: ${{ steps.deploy-step.outputs.deploymentUrl }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
       - name: Pull Vercel Environment Information
@@ -34,10 +32,8 @@ jobs:
       - name: Comment to PR (Succeeded)
         env: 
           DEPLOYMENT_URL: ${{needs.deploy-preview.outputs.deploymentUrl}}
-          RESULT: ${{needs.deploy-preview.result}}
-        if: ${{ env.RESULT }} == 'success'
+        if: needs.deploy-preview.result == 'success'
         uses: actions/github-script@v6
-        id: my-script
         with:
           script: |
             github.rest.issues.createComment({
@@ -49,10 +45,8 @@ jobs:
       - name: Comment to PR (Failure)
         env: 
           DEPLOYMENT_URL: ${{needs.deploy-preview.outputs.deploymentUrl}}
-          RESULT: ${{needs.deploy-preview.result}}
-        if: ${{ env.RESULT }} == 'failure'
+        if: needs.deploy-preview.result == 'failure'
         uses: actions/github-script@v6
-        id: my-script
         with:
           script: |
             github.rest.issues.createComment({
@@ -64,10 +58,8 @@ jobs:
       - name: Comment to PR (cancelled)
         env: 
           DEPLOYMENT_URL: ${{needs.deploy-preview.outputs.deploymentUrl}}
-          RESULT: ${{needs.deploy-preview.result}}
-        if: ${{ env.RESULT }} == 'cancelled'
+        if: needs.deploy-preview.result == 'cancelled'
         uses: actions/github-script@v6
-        id: my-script
         with:
           script: |
             github.rest.issues.createComment({
