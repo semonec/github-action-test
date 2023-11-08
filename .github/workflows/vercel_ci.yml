@@ -52,7 +52,7 @@ jobs:
           RESULT: ${{needs.deploy-preview.result}}
         if: ${{ env.RESULT }} == 'failure'
         uses: actions/github-script@v6
-        id: my-script
+        id: my-script2
         with:
           script: |
             github.rest.issues.createComment({
@@ -67,7 +67,7 @@ jobs:
           RESULT: ${{needs.deploy-preview.result}}
         if: ${{ env.RESULT }} == 'cancelled'
         uses: actions/github-script@v6
-        id: my-script
+        id: my-script3
         with:
           script: |
             github.rest.issues.createComment({
